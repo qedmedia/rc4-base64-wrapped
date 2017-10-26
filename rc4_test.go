@@ -1,49 +1,49 @@
-package rc4_base64_wrapped
+package crypt_base64_wrapped
 
 import (
 	"testing"
 	"strings"
 )
 
-const TEST_KEY = "S3FL3Y8450"
+var TEST_RC4_KEY = []byte("S3FL3Y8450")
 
 func TestWebSafeBase64(t *testing.T) {
 	t.Log("Coder should output web-safe base64 encoded string")
 
-	c, _ := NewCoder(TEST_KEY)
-	encoded := c.EncodeWrap("link-D5a1Z-user@yahoo.com")
+	c, _ := NewRc4Coder(TEST_RC4_KEY)
+	encoded := c.Encrypt("link-D5a1Z-user@yahoo.com")
 
 	if strings.ContainsAny(encoded, "+,=") {
 		t.Errorf("Expected URl-safe string, but it was %s instead.", encoded)
 	}
 }
 
-func TestEncodingDecoding(t *testing.T) {
+func TestRc4EncodingDecoding(t *testing.T) {
 	t.Log("Encoding and decoding encoded string should give an original input sequence")
 
 	str := "link-D5a1Z-user@yahoo.com"
-	c, _ := NewCoder(TEST_KEY)
+	c, _ := NewRc4Coder(TEST_RC4_KEY)
 
-	encoded := c.EncodeWrap(str)
-	decoded, _ := c.UnwrapDecode(encoded)
+	encoded := c.Encrypt(str)
+	decoded, _ := c.Decrypt(encoded)
 
 	if decoded != str {
 		t.Errorf("Expected decoded string to be [%s], but it was [%s] instead.", str, decoded)
 	}
 }
 
-func encodeDecodeNTimes(s string, n int) string {
+func encodeDecodeRc4NTimes(s string, n int) string {
 	decoded := ""
 
-	c, _ := NewCoder(TEST_KEY)
+	c, _ := NewRc4Coder(TEST_RC4_KEY)
 	for i := 0; i < n; i++ {
-		encoded := c.EncodeWrap(s)
-		decoded, _ = c.UnwrapDecode(encoded)
+		encoded := c.Encrypt(s)
+		decoded, _ = c.Decrypt(encoded)
 	}
 	return decoded
 }
 
-func BenchmarkEncodingDecoding(b *testing.B) {
+func BenchmarkRc4EncodingDecoding(b *testing.B) {
 	links := []string{
 		"link-D5a1Z-small@gmail.com",
 		"link-Adn54-medium.length@yahoo.com",
@@ -51,24 +51,24 @@ func BenchmarkEncodingDecoding(b *testing.B) {
 	}
 
 	for n := 0; n < b.N; n++ {
-		encodeDecodeNTimes(links[n%3], 1000)
+		encodeDecodeRc4NTimes(links[n%3], 1000)
 	}
 }
 
-func encodeNTimes(s string, n int) string {
+func encodeRc4NTimes(s string, n int) string {
 	encoded := ""
 
-	c, _ := NewCoder(TEST_KEY)
+	c, _ := NewRc4Coder(TEST_RC4_KEY)
 	for i := 0; i < n; i++ {
-		encoded = c.EncodeWrap(s)
+		encoded = c.Encrypt(s)
 	}
 	return encoded
 }
 
-func BenchmarkEncoding1Million(b *testing.B) {
+func BenchmarkRc4Encoding1Million(b *testing.B) {
 	link :=	"link-Adn54-medium.length@yahoo.com"
 
 	for n := 0; n < b.N; n++ {
-		encodeNTimes(link, 1000000)
+		encodeRc4NTimes(link, 1000000)
 	}
 }
