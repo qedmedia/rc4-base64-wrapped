@@ -27,8 +27,7 @@ func NewRc4Coder(key []byte) (*rc4Base64Wrapped, error) {
 
 //Encodes string using RC4 crypto algorithm
 // and wraps resulting bytes using web-safe base64 encoding
-func (c *rc4Base64Wrapped) Encrypt(s string) string {
-	data := []byte(s)
+func (c *rc4Base64Wrapped) Encrypt(data []byte) string {
 	encrypted := make([]byte, len(data))
 
 	cipher, _ := rc4.NewCipher(c.key)

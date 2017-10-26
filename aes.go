@@ -28,13 +28,11 @@ func NewAesCoder(key []byte) (*aesBase64Wrapped, error) {
 
 //Encodes string using AES crypto algorithm
 // and wraps resulting bytes using web-safe base64 encoding
-func (c *aesBase64Wrapped) Encrypt(s string) string {
-	data := []byte(s)
-
+func (c *aesBase64Wrapped) Encrypt(data []byte) string {
 	ciphertext := make([]byte, aes.BlockSize+len(data))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return s
+		return string(data)
 	}
 
 	encrypter := cipher.NewCTR(c.block, iv)
