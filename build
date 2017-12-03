@@ -1,2 +1,2 @@
 go get -u github.com/qedmedia/rc4-base64-wrapped
-go build -o link-gen /link-gen/link_gen.go
+go build -o link-gen main/link_gen.go
