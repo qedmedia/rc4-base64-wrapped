@@ -33,6 +33,12 @@ func TestAESCryptDecrypt(t *testing.T) {
 	}
 }
 
+func TestAESCryptDecryptN(t *testing.T) {
+	if err := encryptDeryptN(aesCrypt, aesKey, 100, t); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestRc4CryptDecrypt(t *testing.T) {
 	if err := encryptDerypt(rc4Crypt, rc4Key, t); err != nil {
 		t.Fatal(err)
@@ -40,20 +46,51 @@ func TestRc4CryptDecrypt(t *testing.T) {
 }
 
 func encryptDerypt(algoName string, key []byte, t *testing.T) error {
-	encrypted, err := doCrypt(algoName, key, data, true)
+	c, err := createCrypter(algoName, key)
 	if err != nil {
 		return err
 	}
+	encrypted := c.Encrypt([]byte(data))
+
 	t.Logf("%s [key=%s] ecnryption: %s -> %s", algoName, key, data, encrypted)
 
-	decrypted, err := doCrypt(algoName, key, encrypted, false)
+	decrypted, err := c.Decrypt(encrypted)
 	if err != nil {
 		return err
 	}
-	t.Logf("%s [key=%s] decryption: %s -> %s", algoName, key, decrypted, data)
+	t.Logf("%s [key=%s] decryption: %s -> %s", algoName, key, encrypted, data)
 
 	if data != decrypted {
 		return fmt.Errorf("decrypted [%s] is not the same as input [%s] string", decrypted, data)
+	}
+
+	return nil
+}
+
+func encryptDeryptN(algoName string, key []byte, nRepeats int, t *testing.T) error {
+	c, err := createCrypter(algoName, key)
+	if err != nil {
+		return err
+	}
+	encs := make([]string, 0, nRepeats)
+	for i := 0; i < nRepeats; i++ {
+		enc := c.Encrypt([]byte(data))
+		encs = append(encs, enc)
+		t.Logf("%s [key=%s] ecnryption: %s -> %s", algoName, key, data, enc)
+	}
+
+	t.Logf("%s [key=%s] decryption: ", algoName, key)
+
+	for _, enc := range encs {
+		decrypted, err := c.Decrypt(enc)
+		if err != nil {
+			return err
+		}
+
+		t.Logf("\t %s -> %s\n", enc, decrypted)
+		if data != decrypted {
+			return fmt.Errorf("decrypted [%s] is not the same as input [%s] string", decrypted, data)
+		}
 	}
 
 	return nil

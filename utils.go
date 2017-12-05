@@ -20,13 +20,13 @@ func contains(idx []int, v int) bool {
 	return false
 }
 
-func sprinklingIndices(l int) []int {
+func sprinklingIndices(len int) []int {
 	rand.Seed(time.Now().UnixNano())
 
-	n := rand.Intn(l/3) + 1
+	n := rand.Intn(len/3) + 1
 	idx := make([]int, 1, n)
 	for i := 0; i < n; i++ {
-		v := rand.Intn(l-2) + 1
+		v := rand.Intn(len-2) + 1
 		if !contains(idx, v) {
 			idx = append(idx, v)
 		}

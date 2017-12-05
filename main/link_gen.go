@@ -7,13 +7,15 @@ import (
 	"os"
 
 	"github.com/qedmedia/rc4-base64-wrapped"
+	"time"
 )
 
 var (
-	flagAlgo    string
-	flagKey     string
-	flagEncrypt string
-	flagDecrypt string
+	flagAlgo     string
+	flagKey      string
+	flagEncrypt  string
+	flagDecrypt  string
+	flagRepeatsN int
 )
 
 const (
@@ -26,6 +28,7 @@ func main() {
 	flag.StringVar(&flagKey, "k", "", "cypher key")
 	flag.StringVar(&flagEncrypt, "e", "", "string to encrypt")
 	flag.StringVar(&flagDecrypt, "d", "", "string to decrypt")
+	flag.IntVar(&flagRepeatsN, "n", 1, "number of links to generate")
 	flag.Parse()
 
 	err := validateFlags()
@@ -40,13 +43,30 @@ func main() {
 		str = flagEncrypt
 	}
 
-	res, err := doCrypt(flagAlgo, []byte(flagKey), str, encrypt)
+	crypter, err := createCrypter(flagAlgo, []byte(flagKey))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Println(res)
+	if encrypt {
+		data := []byte(str)
+		for i := 0; i < flagRepeatsN; i++ {
+			res := crypter.Encrypt(data)
+			fmt.Println(res)
+
+			// don't remove this sleep, otherwise Go compiler
+			// will optimize Encrypt() call returning the same string on each iteration
+			time.Sleep(1 * time.Nanosecond)
+		}
+	} else {
+		d, err := crypter.Decrypt(str)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error decrypting: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println(d)
+	}
 }
 
 func validateFlags() error {
@@ -68,20 +88,16 @@ func validateFlags() error {
 		return errors.New("should be encrypt or decrypt, cannot use both `-e` and `-d`")
 	}
 
+	if flagDecrypt != "" && flagRepeatsN != 1 {
+		return errors.New("`-n` can be used only in encryption mode")
+	}
+
 	return nil
 }
 
-func doCrypt(algo string, key []byte, data string, encrypt bool) (string, error) {
-	crypter, err := createCrypter(algo, key)
-	if err != nil {
-		return "", fmt.Errorf("failed create crypter: %s", err.Error())
-	}
-
-	if encrypt {
-		return crypter.Encrypt([]byte(data)), nil
-	} else {
-		return crypter.Decrypt(data)
-	}
+type crypter interface {
+	Encrypt(data []byte) string
+	Decrypt(s string) (string, error)
 }
 
 func createCrypter(algo string, key []byte) (crypter, error) {
@@ -92,7 +108,3 @@ func createCrypter(algo string, key []byte) (crypter, error) {
 	}
 }
 
-type crypter interface {
-	Encrypt(data []byte) string
-	Decrypt(s string) (string, error)
-}
