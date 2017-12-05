@@ -15,7 +15,7 @@ var (
 	flagKey      string
 	flagEncrypt  string
 	flagDecrypt  string
-	flagRepeatsN int
+	flagRepeatsN uint
 )
 
 const (
@@ -28,7 +28,7 @@ func main() {
 	flag.StringVar(&flagKey, "k", "", "cypher key")
 	flag.StringVar(&flagEncrypt, "e", "", "string to encrypt")
 	flag.StringVar(&flagDecrypt, "d", "", "string to decrypt")
-	flag.IntVar(&flagRepeatsN, "n", 1, "number of links to generate")
+	flag.UintVar(&flagRepeatsN, "n", 1, "number of links to generate")
 	flag.Parse()
 
 	err := validateFlags()
@@ -51,7 +51,7 @@ func main() {
 
 	if encrypt {
 		data := []byte(str)
-		for i := 0; i < flagRepeatsN; i++ {
+		for i := uint(0); i < flagRepeatsN; i++ {
 			res := crypter.Encrypt(data)
 			fmt.Println(res)
 
@@ -107,4 +107,3 @@ func createCrypter(algo string, key []byte) (crypter, error) {
 		return crypt_base64_wrapped.NewAesCoder(key)
 	}
 }
-
